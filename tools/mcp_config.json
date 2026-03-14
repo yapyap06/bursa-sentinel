@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "bursasentinel-tools": {
+      "command": "python",
+      "args": [
+        "tools/mcp_server.py"
+      ],
+      "env": {}
+    }
+  }
+}

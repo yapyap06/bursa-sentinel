@@ -1,0 +1,25 @@
+# BursaSentinel — Python dependencies
+# Install: pip install -r requirements.txt
+
+# ── Gemini / ADK ─────────────────────────────────────────────────────────── #
+google-generativeai>=0.7.2
+# google-adk                  # uncomment when stable ADK wheel ships
+
+# ── MCP protocol ─────────────────────────────────────────────────────────── #
+mcp>=1.0.0
+
+# ── Scraping ─────────────────────────────────────────────────────────────── #
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.1.0
+
+# ── Web server (Phase 5 — Flask API) ─────────────────────────────────────── #
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# ── Async support ─────────────────────────────────────────────────────────── #
+aiohttp>=3.9.0
+
+# ── Developer tools ─────────────────────────────────────────────────────────#
+python-dotenv>=1.0.0
+pytest>=8.0.0

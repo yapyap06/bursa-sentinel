@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BursaSentinel — Strategic Research Swarm</title>
+<meta name="description" content="AI-powered Bursa Malaysia intelligence. Gemini Nexus SequentialAgent Swarm."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080c14;--surface:#0e1220;--card:#131825;--card2:#161d2e;
+  --border:#1c2438;--border2:#232d45;
+  --accent:#3b82f6;--accent2:#8b5cf6;--accent3:#06b6d4;
+  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#4a5568;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── HEADER ── */
+header{
+  background:linear-gradient(135deg,#0d1628 0%,#080c14 100%);
+  border-bottom:1px solid var(--border);padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;backdrop-filter:blur(16px);
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{
+  width:38px;height:38px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;box-shadow:0 0 20px rgba(59,130,246,.35);
+}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:-.5px}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:12px}
+.status-pill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);
+  border-radius:20px;padding:5px 12px;font-size:11px;color:var(--green);font-weight:500;
+}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse-anim 2s infinite}
+@keyframes pulse-anim{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+
+/* ── LAYOUT: SIDEBAR + MAIN ── */
+.layout{display:flex;min-height:calc(100vh - 67px)}
+.sidebar{
+  width:220px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);padding:20px 14px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.sidebar-title{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.watchlist-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;cursor:pointer;
+  transition:border-color .2s,background .2s;position:relative;overflow:hidden;
+}
+.watchlist-item:hover,.watchlist-item.active{border-color:var(--accent);background:var(--card2)}
+.watchlist-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:0 2px 2px 0}
+.wl-ticker{font-size:13px;font-weight:700;font-family:var(--mono)}
+.wl-name{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl-meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.wl-rec{font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:20px}
+.rec-buy-sm{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.rec-hold-sm{background:rgba(245,158,11,.15);color:var(--yellow);border:1px solid rgba(245,158,11,.3)}
+.rec-avoid-sm{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+canvas.sparkline{display:block;margin-top:6px}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;padding:24px;overflow-y:auto;max-width:960px}
+
+/* ── HERO SECTION ── */
+.hero{
+  position:relative;background:linear-gradient(135deg,#0d1a3a 0%,#0a0f20 60%,#12082a 100%);
+  border:1px solid var(--border2);border-radius:16px;
+  padding:28px 32px;margin-bottom:24px;overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;opacity:.08;
+  background-image:linear-gradient(var(--border2) 1px,transparent 1px),linear-gradient(90deg,var(--border2) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+.radar-wrap{position:absolute;right:28px;top:50%;transform:translateY(-50%);width:120px;height:120px}
+.radar-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(59,130,246,.2);
+}
+.radar-ring:nth-child(2){inset:16px;border-color:rgba(59,130,246,.3)}
+.radar-ring:nth-child(3){inset:32px;border-color:rgba(59,130,246,.4)}
+.radar-sweep{
+  position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 310deg,rgba(59,130,246,.5) 355deg,transparent 360deg);
+  animation:sweep 3s linear infinite;
+}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.radar-dot{
+  position:absolute;border-radius:50%;
+  background:var(--green);box-shadow:0 0 6px var(--green);
+  animation:blink 1.5s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);
+  border-radius:20px;padding:4px 12px;font-size:10px;color:var(--accent);
+  font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;
+}
+.hero-title{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.1;position:relative}
+.hero-title span{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{font-size:13px;color:var(--muted);margin-top:8px;max-width:420px;line-height:1.6;position:relative}
+.hero-stats{display:flex;gap:24px;margin-top:16px;position:relative}
+.hero-stat .val{font-size:20px;font-weight:700;font-family:var(--mono)}
+.hero-stat .lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+
+/* ── CONTROLS ── */
+.controls{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;margin-bottom:20px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+.controls label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.ticker-select{
+  background:var(--surface);border:1px solid var(--border2);
+  color:var(--text);border-radius:8px;padding:7px 12px;
+  font-family:var(--mono);font-size:13px;cursor:pointer;outline:none;
+  transition:border-color .2s;
+}
+.ticker-select:focus{border-color:var(--accent)}
+.run-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:8px;padding:8px 18px;
+  font-size:13px;font-weight:700;cursor:pointer;
+  transition:opacity .2s,transform .15s,box-shadow .2s;
+  box-shadow:0 0 0 rgba(59,130,246,0);
+}
+.run-btn:not(:disabled):hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,.4)}
+.run-btn:disabled{opacity:.5;cursor:not-allowed}
+.export-btn{
+  background:transparent;color:var(--muted);border:1px solid var(--border2);
+  border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;
+  transition:border-color .2s,color .2s;display:flex;align-items:center;gap:6px;
+}
+.export-btn:hover{border-color:var(--accent);color:var(--accent)}
+#runStatus{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+/* ── PIPELINE ── */
+.pipeline{display:flex;align-items:center;margin-bottom:20px}
+.pipeline-stage{
+  flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;text-align:center;
+  transition:border-color .4s,box-shadow .4s;
+}
+.pipeline-stage.running{border-color:var(--accent);box-shadow:0 0 16px rgba(59,130,246,.3);animation:stage-pulse .8s ease-in-out infinite alternate}
+.pipeline-stage.done{border-color:var(--green);box-shadow:0 0 10px rgba(16,185,129,.2)}
+@keyframes stage-pulse{from{box-shadow:0 0 8px rgba(59,130,246,.2)}to{box-shadow:0 0 24px rgba(59,130,246,.5)}}
+.pipeline-arrow{width:36px;text-align:center;color:var(--muted2);font-size:16px;flex-shrink:0}
+.pipeline-icon{font-size:22px;margin-bottom:4px;transition:transform .3s}
+.pipeline-stage.running .pipeline-icon{animation:spin-slight 2s linear infinite}
+@keyframes spin-slight{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.pipeline-name{font-size:12px;font-weight:700}
+.pipeline-role{font-size:10px;color:var(--muted);margin-top:2px}
+.pipeline-status{font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-top:4px;height:12px;font-weight:600}
+
+/* ── RECOMMENDATION BANNER ── */
+.rec-banner{border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px;transition:all .5s}
+.rec-buy {background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(16,185,129,.04));border:1px solid rgba(16,185,129,.35)}
+.rec-hold{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.04));border:1px solid rgba(245,158,11,.35)}
+.rec-avoid{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border:1px solid rgba(239,68,68,.35)}
+.rec-icon{font-size:38px;flex-shrink:0}
+.rec-main{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.rec-conf{font-size:11px;color:var(--muted);margin-top:2px}
+.rec-summary{font-size:12px;color:#94a3b8;margin-top:6px;line-height:1.6;max-width:540px}
+
+/* ── RISK FLAGS ── */
+.risk-flags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.risk-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);
+}
+.risk-pill.warn{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:var(--yellow)}
+.risk-pill.info{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3);color:var(--accent)}
+
+/* ── GRID ── */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:720px){.grid-3,.grid-2{grid-template-columns:1fr}.layout{flex-direction:column}.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border)}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.card-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.metric-val{font-size:30px;font-weight:800;line-height:1}
+.metric-label{font-size:11px;color:var(--muted);margin-top:4px}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.badge-green{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.badge-red{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.badge-yellow{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.3)}
+
+/* ── SECTION TITLE ── */
+.section-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── THRESHOLD ROWS ── */
+.threshold-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.threshold-row:last-child{border-bottom:none}
+
+/* ── SENTIMENT BAR ── */
+.sentiment-bar-bg{height:7px;border-radius:4px;background:linear-gradient(to right,var(--red),var(--yellow),var(--green));position:relative;margin:8px 0}
+.sentiment-marker{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--accent);position:absolute;top:-4px;transform:translateX(-50%);transition:left .6s cubic-bezier(.34,1.56,.64,1)}
+
+/* ── THOUGHT TRACE ── */
+.thought-trace{
+  background:#070b12;border:1px solid var(--border);border-left:3px solid var(--accent2);
+  border-radius:8px;padding:14px;font-family:var(--mono);font-size:11px;
+  line-height:1.75;color:#94a3b8;white-space:pre-wrap;overflow-x:auto;max-height:200px;overflow-y:auto;
+}
+.trace-label{color:var(--accent2);font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:block}
+
+/* ── NEWS ── */
+.news-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.news-item:last-child{border-bottom:none}
+.news-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.news-headline{font-size:12px;line-height:1.5}
+.news-meta{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── RECOVERY LOG ── */
+.recovery-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;font-size:11px;color:#94a3b8;font-family:var(--mono);border-bottom:1px solid var(--border)}
+.recovery-item:last-child{border-bottom:none}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:24px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:20px}
+
+/* ── LOADING OVERLAY ── */
+.stage-log{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;font-family:var(--mono);font-size:11px;color:var(--muted);
+  margin-bottom:18px;display:none;
+}
+.stage-log.visible{display:block}
+.stage-log-line{margin-bottom:2px}
+.stage-log-line.ok{color:var(--green)}
+.stage-log-line.run{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">BursaSentinel</div>
+      <div class="logo-sub">Strategic Research Swarm · Gemini Nexus</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill" id="serverPill">
+      <div class="pulse"></div>
+      <span id="serverPillText">Checking API…</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- ── WATCHLIST SIDEBAR ── -->
+<aside class="sidebar">
+  <div>
+    <div class="sidebar-title">📊 Watchlist</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px" id="watchlist"></div>
+  </div>
+  <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border)">
+    <div class="sidebar-title">Hackathon</div>
+    <div style="font-size:10px;color:var(--muted);line-height:1.6">
+      Track A · Gemini Nexus<br>
+      Agentic Agency 40%<br>
+      Technical Depth 30%
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN PANEL ── -->
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <div class="radar-wrap">
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-sweep"></div>
+      <div class="radar-dot" style="width:6px;height:6px;top:28%;left:60%"></div>
+      <div class="radar-dot" style="width:5px;height:5px;top:60%;left:35%;animation-delay:.5s"></div>
+      <div class="radar-dot" style="width:4px;height:4px;top:45%;left:72%;animation-delay:1s"></div>
+    </div>
+    <div class="hero-badge">🛡️ Sequential Agent Swarm</div>
+    <h1 class="hero-title">Bursa Malaysia<br><span>Intelligence Hub</span></h1>
+    <p class="hero-sub">Two Gemini agents — Infiltrator collects, Strategist reasons. Every output carries a traceable thought signature.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="val" style="color:var(--accent)">2</div><div class="lbl">Active Agents</div></div>
+      <div class="hero-stat"><div class="val" style="color:var(--accent2)">3</div><div class="lbl">MCP Tools</div></div>
+      <div class="hero-stat"><div class="val" style="color:var(--green)" id="heroStocksScanned">3</div><div class="lbl">Stocks Tracked</div></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <label>Ticker</label>
+    <select class="ticker-select" id="tickerSelect" onchange="onTickerChange()">
+      <option value="MAYBANK">MAYBANK — Malayan Banking</option>
+      <option value="CIMB">CIMB — CIMB Group Holdings</option>
+      <option value="TENAGA">TENAGA — Tenaga Nasional</option>
+    </select>
+    <button class="run-btn" id="runBtn" onclick="runSwarm()">⚡ Run Swarm</button>
+    <button class="export-btn" onclick="exportReport()">⬇️ Export JSON</button>
+    <span id="runStatus"></span>
+  </div>
+
+  <!-- STAGE LOG -->
+  <div class="stage-log" id="stageLog">
+    <div class="stage-log-line" id="log1"></div>
+    <div class="stage-log-line" id="log2"></div>
+    <div class="stage-log-line" id="log3"></div>
+  </div>
+
+  <!-- PIPELINE -->
+  <p class="section-title">🔍 Agent Pipeline</p>
+  <div class="pipeline" style="margin-bottom:18px">
+    <div class="pipeline-stage" id="ps1">
+      <div class="pipeline-icon">🔍</div>
+      <div class="pipeline-name">Infiltrator</div>
+      <div class="pipeline-role">Data Collector · MCP Tools</div>
+      <div class="pipeline-status" id="ps1-status"></div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage" id="ps2">
+      <div class="pipeline-icon">🧠 </div>
+      <div class="pipeline-name">Strategist</div>
+      <div class="pipeline-role">Threshold Reasoner · Recovery</div>
+      <div class="pipeline-status" id="ps2-status"></div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage" id="ps3">
+      <div class="pipeline-icon">📊</div>
+      <div class="pipeline-name">Report</div>
+      <div class="pipeline-role">Recommendation + Risk</div>
+      <div class="pipeline-status" id="ps3-status"></div>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATION BANNER -->
+  <div id="recBanner" class="rec-banner rec-buy">
+    <div class="rec-icon" id="recIcon">✅</div>
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="rec-main" id="recText">BUY</div>
+        <div class="rec-conf" id="recConf">Confidence: HIGH · Yield Fortress · Value Zone · Balance Sheet Safe</div>
+      </div>
+      <div class="rec-summary" id="recSummary">Maybank exhibits a dividend yield of 6.24%, well above the 4% threshold, with solid earnings growth. All thresholds cleared. Recommend accumulation.</div>
+      <div class="risk-flags" id="riskFlags"></div>
+    </div>
+  </div>
+
+  <!-- FINANCIAL METRICS -->
+  <p class="section-title">📊 Financial Metrics</p>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Dividend Yield</div>
+      <div class="metric-val" id="metDY" style="color:var(--green)">6.24%</div>
+      <div class="metric-label">Threshold &gt; 4.0% · <span id="badgeDY" class="badge badge-green">✓ Pass</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">P/E Ratio</div>
+      <div class="metric-val" id="metPE">12.4×</div>
+      <div class="metric-label">Threshold &lt; 20.0 · <span id="badgePE" class="badge badge-green">✓ Pass</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Debt / Equity</div>
+      <div class="metric-val" id="metDE">0.82</div>
+      <div class="metric-label">Threshold &lt; 1.5 · <span id="badgeDE" class="badge badge-green">✓ Pass</span></div>
+    </div>
+  </div>
+  <div class="grid-3" style="margin-top:0">
+    <div class="card">
+      <div class="card-title">Market Cap (MYR)</div>
+      <div class="metric-val" id="metMC" style="font-size:20px">RM 114.5B</div>
+      <div class="metric-label">Large Cap</div>
+    </div>
+    <div class="card">
+      <div class="card-title">52-Week Range</div>
+      <div class="metric-val" id="met52" style="font-size:17px">8.62 ” 10.38</div>
+      <div class="metric-label">Current in upper band</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Revenue Growth YoY</div>
+      <div class="metric-val" id="metRG" style="color:var(--green)">+7.3%</div>
+      <div class="metric-label">Year-over-year</div>
+    </div>
+  </div>
+
+  <!-- THRESHOLDS + SENTIMENT -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Threshold Results</div>
+      <div class="threshold-row"><span style="font-size:12px">Dividend Yield &gt; 4%</span><span id="thDY" class="badge badge-green">✓ Yield Fortress</span></div>
+      <div class="threshold-row"><span style="font-size:12px">P/E Ratio &lt; 20</span><span id="thPE" class="badge badge-green">✓ Value Zone</span></div>
+      <div class="threshold-row"><span style="font-size:12px">Debt/Equity &lt; 1.5</span><span id="thDE" class="badge badge-green">✓ Balance Sheet Safe</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">News Sentiment Score</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Synthesised from headlines (−1 bearish → +1 bullish)</div>
+      <div class="sentiment-bar-bg"><div class="sentiment-marker" id="sentMarker" style="left:75%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted2);margin-top:3px"><span>−1.0</span><span>0</span><span>+1.0</span></div>
+      <div style="margin-top:10px;font-size:26px;font-weight:800" id="sentScore" style="color:var(--green)">+0.50</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px" id="sentLabel">Moderately Bullish</div>
+    </div>
+  </div>
+
+  <!-- THOUGHT TRACES -->
+  <p class="section-title">🔍¬ Agent Thought Traces</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🔍 Infiltrator Trace</div>
+      <div class="thought-trace"><span class="trace-label">⟨thought_trace⟩</span><span id="infiltratorTrace">SOURCE_1: BursaScraperTool → OK
+SOURCE_2: NewsScraperTool → OK
+DATA_FOUND: dividend_yield_pct, pe_ratio,
+  debt_to_equity, market_cap_myr,
+  52_week_high, 52_week_low,
+  revenue_growth_yoy_pct, 3x headlines
+ANOMALIES: NIM compression risk in news
+CONFIDENCE: HIGH</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧠  Strategist Trace</div>
+      <div class="thought-trace"><span class="trace-label">⟨thought_trace⟩</span><span id="strategistTrace">THRESHOLDS_APPLIED:
+  DY 6.24% > 4.0% → PASS (Yield Fortress)
+  PE 12.4  < 20.0 → PASS (Value Zone)
+  DE 0.82  < 1.5  → PASS (Balance Sheet Safe)
+RECOVERY_ACTIONS: NONE
+CLASSIFICATION: [Yield Fortress, Value Zone,
+  Balance Sheet Safe]
+SENTIMENT: +0.50 (NIM risk offset by DY)
+CONFIDENCE: HIGH</span></div>
+    </div>
+  </div>
+
+  <!-- AGENTIC RECOVERY + NEWS -->
+  <div class="grid-2">
+    <div class="card">
+      <p class="section-title" style="font-size:13px">⚡ Recovery Log</p>
+      <div id="recoveryLog">
+        <div class="recovery-item"><span style="color:var(--green)">✅</span><span>No recovery triggered — all fields present for MAYBANK.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="section-title" style="font-size:13px">📊° News Feed</p>
+      <div id="newsFeed">
+        <div class="news-item"><div class="news-dot" style="background:var(--green)"></div><div><div class="news-headline">Maybank declares 32 sen interim dividend, yield stays above 6%</div><div class="news-meta">The Star Business · positive</div></div></div>
+        <div class="news-item"><div class="news-dot" style="background:var(--green)"></div><div><div class="news-headline">Maybank Q3 profit up 8.2% YoY on Islamic banking growth</div><div class="news-meta">The Edge Markets · positive</div></div></div>
+        <div class="news-item"><div class="news-dot" style="background:var(--red)"></div><div><div class="news-headline">Analysts warn of NIM compression amid rate uncertainty</div><div class="news-meta">Reuters Malaysia · negative</div></div></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<footer>BursaSentinel · Gemini Nexus Hackathon Track A · Google ADK + MCP + BeautifulSoup4<br>Mock data active — add GOOGLE_API_KEY to .env for live swarm execution</footer>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────── //
+const API_BASE = 'http://127.0.0.1:5000';
+let _serverOnline = false;   // discovered on init via /api/health
+let _liveReport = null;      // last live report from the API
+
+// ── DATA STORE (mock fallback) ────────────────────────────────────────────── //
+const REPORTS = {
+  MAYBANK:{
+    rec:'BUY',conf:'HIGH',icon:'✅',cls:'rec-buy',recSm:'rec-buy-sm',
+    classifications:['Yield Fortress','Value Zone','Balance Sheet Safe'],
+    summary:'Maybank exhibits a dividend yield of 6.24%, well above the 4% threshold, with solid earnings growth. All thresholds cleared. Recommend accumulation on dips.',
+    metrics:{dy:'6.24%',dyC:'var(--green)',dyP:true,pe:'12.4×',peP:true,de:'0.82',deP:true,mc:'RM 114.5B',range:'8.62 ” 10.38',rg:'+7.3%',rgC:'var(--green)'},
+    sentiment:0.50,riskFlags:[{label:'NIM Compression',type:'warn'},{label:'Rate Sensitivity',type:'warn'}],
+    infiltratorTrace:'SOURCE_1: BursaScraperTool → OK\nSOURCE_2: NewsScraperTool → OK\nDATA_FOUND: dividend_yield_pct, pe_ratio,\n  debt_to_equity, market_cap_myr\nANOMALIES: NIM compression risk\nCONFIDENCE: HIGH',
+    strategistTrace:'THRESHOLDS_APPLIED:\n  DY 6.24% > 4.0% → PASS (Yield Fortress)\n  PE 12.4  < 20.0 → PASS (Value Zone)\n  DE 0.82  < 1.5  → PASS (Balance Sheet Safe)\nRECOVERY_ACTIONS: NONE\nCONFIDENCE: HIGH',
+    recovery:['✅ No recovery triggered — all fields present for MAYBANK.'],
+    news:[{h:'Maybank declares 32 sen interim dividend, yield stays above 6%',s:'The Star Business (MOCK)',sent:'positive'},{h:'Maybank Q3 profit up 8.2% YoY',s:'The Edge Markets (MOCK)',sent:'positive'},{h:'Analysts warn of NIM compression',s:'Reuters Malaysia (MOCK)',sent:'negative'}],
+    sparkline:[8.62,8.90,9.10,8.95,9.40,9.75,9.95,10.38,10.20,10.05]
+  },
+  CIMB:{
+    rec:'BUY',conf:'MEDIUM',icon:'✅',cls:'rec-buy',recSm:'rec-buy-sm',
+    classifications:['Yield Fortress','Value Zone'],
+    summary:'CIMB passes dividend yield and P/E thresholds with regional expansion as a growth catalyst.',
+    metrics:{dy:'5.11%',dyC:'var(--green)',dyP:true,pe:'10.2×',peP:true,de:'1.01',deP:true,mc:'RM 61.2B',range:'6.21 ” 7.84',rg:'+4.8%',rgC:'var(--green)'},
+    sentiment:0.40,riskFlags:[{label:'Leverage Watch',type:'warn'},{label:'FX Exposure',type:'info'}],
+    infiltratorTrace:'SOURCE_1: BursaScraperTool → OK\nSOURCE_2: NewsScraperTool → OK\nDATA_FOUND: all fields\nANOMALIES: None\nCONFIDENCE: HIGH',
+    strategistTrace:'THRESHOLDS_APPLIED:\n  DY 5.11% > 4.0% → PASS\n  PE 10.2  < 20.0 → PASS\n  DE 1.01  < 1.5  → PASS\nRECOVERY_ACTIONS: NONE\nCONFIDENCE: MEDIUM',
+    recovery:['✅ No recovery triggered.'],
+    news:[{h:'CIMB Group posts record quarterly profit on regional expansion',s:'The Star Business (MOCK)',sent:'positive'},{h:'CIMB dividend payout ratio raised to 55%',s:'The Edge (MOCK)',sent:'positive'}],
+    sparkline:[6.21,6.45,6.80,6.60,7.00,7.20,7.50,7.84,7.65,7.70]
+  },
+  TENAGA:{
+    rec:'HOLD',conf:'MEDIUM',icon:'⏸️',cls:'rec-hold',recSm:'rec-hold-sm',
+    classifications:['Value Zone'],
+    summary:"Tenaga's dividend yield of 3.78% falls below the 4% threshold. Revenue declined YoY. Green sukuk signals long-term potential.",
+    metrics:{dy:'3.78%',dyC:'var(--yellow)',dyP:false,pe:'14.9×',peP:true,de:'1.22',deP:true,mc:'RM 87.3B',range:'11.80 ” 15.20',rg:'−1.2%',rgC:'var(--red)'},
+    sentiment:-0.10,riskFlags:[{label:'Yield Below Threshold',type:'danger'},{label:'Revenue Decline',type:'danger'},{label:'Coal Cost Headwind',type:'warn'}],
+    infiltratorTrace:'SOURCE_1: BursaScraperTool → OK\nSOURCE_2: NewsScraperTool → OK\nDATA_FOUND: all fields\nANOMALIES: Revenue -1.2%, coal headwind\nCONFIDENCE: HIGH',
+    strategistTrace:'THRESHOLDS_APPLIED:\n  DY 3.78% > 4.0% → FAIL\n  PE 14.9  < 20.0 → PASS\n  DE 1.22  < 1.5  → PASS\nRECOVERY_ACTIONS: TRIGGERED\nCONFIDENCE: MEDIUM',
+    recovery:['⚠️ RECOVERY TRIGGERED: dividend_yield_pct 3.78% < threshold 4.0%','🔍 Action: Yield Fortress withheld. Downgrade to HOLD.','📊‰ Confidence capped at MEDIUM.'],
+    news:[{h:'Tenaga reports lower profits amid coal cost volatility',s:'The Star Business (MOCK)',sent:'negative'},{h:'TNB announces RM500m green sukuk',s:'Bernama (MOCK)',sent:'positive'}],
+    sparkline:[15.20,14.80,14.20,13.50,12.90,12.40,12.80,11.80,12.10,12.30]
+  }
+};
+
+let currentTicker = 'MAYBANK';
+let currentReport = REPORTS.MAYBANK;
+
+// ── INIT ─────────────────────────────────────────────────────────────────── //
+async function init(){
+  buildWatchlist();
+  renderReport('MAYBANK', false);
+  await checkServerStatus();
+}
+
+async function checkServerStatus(){
+  const pill = document.getElementById('serverPill');
+  const pillText = document.getElementById('serverPillText');
+  try {
+    const r = await fetch(`${API_BASE}/api/health`, {signal: AbortSignal.timeout(2500)});
+    if(r.ok){
+      _serverOnline = true;
+      if(pill){ pill.style.background='rgba(16,185,129,.08)'; pill.style.borderColor='rgba(16,185,129,.25)'; }
+      if(pillText) pillText.textContent = '🛡️ Gemini Agent Live';
+      return;
+    }
+  } catch(e){ /* ignore */ }
+  _serverOnline = false;
+  if(pill){ pill.style.background='rgba(245,158,11,.08)'; pill.style.borderColor='rgba(245,158,11,.25)'; }
+  if(pillText){ pillText.style.color='var(--yellow)'; pillText.textContent = '⚠️ Mock Mode (start api_server.py)'; }
+}
+
+// ── WATCHLIST ─────────────────────────────────────────────────────────────── //
+function buildWatchlist(){
+  const el = document.getElementById('watchlist'); el.innerHTML = '';
+  Object.entries(REPORTS).forEach(([tk, d])=>{
+    const div = document.createElement('div');
+    div.className = 'watchlist-item' + (tk===currentTicker?' active':'');
+    div.id = 'wl-'+tk;
+    div.onclick = ()=>{ selectTicker(tk); };
+    div.innerHTML = `
+      <div class="wl-ticker">${tk}</div>
+      <div class="wl-name">${tk==='MAYBANK'?'Malayan Banking':tk==='CIMB'?'CIMB Group':'Tenaga Nasional'}</div>
+      <div class="wl-meta">
+        <span class="wl-rec ${d.recSm}">${d.rec}</span>
+        <span style="font-size:10px;color:var(--muted)">${d.conf}</span>
+      </div>
+      <canvas class="sparkline" id="spark-${tk}" width="160" height="36"></canvas>
+    `;
+    el.appendChild(div);
+    setTimeout(()=>drawSparkline('spark-'+tk, d.sparkline, d.rec), 50);
+  });
+}
+
+function drawSparkline(id, data, rec){
+  const canvas = document.getElementById(id); if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const min=Math.min(...data), max=Math.max(...data), range=max-min||1;
+  const color = rec==='BUY'?'#10b981':rec==='HOLD'?'#f59e0b':'#ef4444';
+  ctx.clearRect(0,0,W,H); ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=(i/(data.length-1))*W, y=H-((v-min)/range)*(H-6)-3;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,color+'33'); grad.addColorStop(1,color+'00');
+  ctx.fillStyle=grad; ctx.fill();
+}
+
+function selectTicker(tk){
+  document.querySelectorAll('.watchlist-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('wl-'+tk)?.classList.add('active');
+  document.getElementById('tickerSelect').value = tk;
+  renderReport(tk, false);
+}
+
+function onTickerChange(){
+  selectTicker(document.getElementById('tickerSelect').value);
+}
+
+// ── RUN SWARM ─────────────────────────────────────────────────────────────── //
+async function runSwarm(){
+  const tk = document.getElementById('tickerSelect').value;
+  const btn = document.getElementById('runBtn');
+  const status = document.getElementById('runStatus');
+  const logEl = document.getElementById('stageLog');
+
+  btn.disabled = true;
+  status.textContent = '';
+  logEl.classList.add('visible');
+  resetPipeline();
+
+  if(_serverOnline){
+    await runLive(tk, btn, status, logEl);
+  } else {
+    runMock(tk, btn, status, logEl);
+  }
+}
+
+// ── Live path: SSE + /api/analyze ─────────────────────────────────────────── //
+async function runLive(tk, btn, status, logEl){
+  // 1. Connect SSE listener
+  const sse = new EventSource(`${API_BASE}/api/stream/${tk}`);
+
+  sse.addEventListener('stage', e => {
+    const d = JSON.parse(e.data);
+    const s = d.stage, agent = d.agent, st = d.status;
+    if(st === 'RUNNING'){
+      setPipelineStage(`ps${s}`, 'running', '● RUNNING', 'var(--accent)');
+      setLog(`log${s}`, `[${ts()}] Stage ${s} — ${agent}: ${d.message||'processing…'}`, 'run');
+      status.textContent = `Stage ${s}: ${agent} running…`;
+    } else if(st === 'DONE'){
+      setPipelineStage(`ps${s}`, 'done', '✓ DONE', 'var(--green)');
+      setLog(`log${s}`, `[${ts()}] ✓ ${agent} done (${d.elapsed_ms}ms)`, 'ok');
+    }
+  });
+
+  sse.addEventListener('complete', e => {
+    const d = JSON.parse(e.data);
+    setPipelineStage('ps3', 'done', '✓ DONE', 'var(--green)');
+    setLog('log3', `[${ts()}] ✓ Report assembled in ${d.elapsed_ms}ms`, 'ok');
+    sse.close();
+  });
+
+  sse.addEventListener('error', () => sse.close());
+
+  // 2. Trigger the actual analysis (runs on server, SSE events arrive in parallel)
+  try {
+    status.textContent = '⚡ Swarm running via Gemini API…';
+    const resp = await fetch(`${API_BASE}/api/analyze?ticker=${tk}`);
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    sse.close();
+    _liveReport = data;
+    renderLiveReport(data);
+    btn.disabled = false;
+    const cached = data._from_cache ? ' (cached)' : '';
+    status.textContent = `✅ Mission complete${cached}`;
+    setTimeout(()=>{ logEl.classList.remove('visible'); status.textContent=''; }, 5000);
+  } catch(err){
+    sse.close();
+    console.error('Live API error:', err);
+    status.textContent = `⚠️ API error — falling back to mock`;
+    runMockImmediate(tk, btn, logEl);
+  }
+}
+
+// ── Mock path (server offline or API error) ────────────────────────────────── //
+function runMock(tk, btn, status, logEl){
+  setPipelineStage('ps1','running','● RUNNING','var(--accent)');
+  setLog('log1',`[${ts()}] Stage 1 — InfiltratorAgent: querying MCP tools for ${tk}… [MOCK]`,'run');
+  status.textContent = 'Stage 1: Infiltrator collecting… [MOCK MODE]';
+  setTimeout(()=>{
+    setPipelineStage('ps1','done','✓ DONE','var(--green)');
+    setLog('log1',`[${ts()}] ✓ InfiltratorAgent done`,'ok');
+    setPipelineStage('ps2','running','● RUNNING','var(--accent)');
+    setLog('log2',`[${ts()}] Stage 2 — StrategistAgent: reasoning over thresholds… [MOCK]`,'run');
+    status.textContent = 'Stage 2: Strategist reasoning… [MOCK MODE]';
+  }, 1000);
+  setTimeout(()=>{
+    setPipelineStage('ps2','done','✓ DONE','var(--green)');
+    setLog('log2',`[${ts()}] ✓ StrategistAgent done`,'ok');
+    setPipelineStage('ps3','running','● BUILDING','var(--accent)');
+    setLog('log3',`[${ts()}] Stage 3 — Assembling report…`,'run');
+  }, 2100);
+  setTimeout(()=>{
+    setPipelineStage('ps3','done','✓ DONE','var(--green)');
+    setLog('log3',`[${ts()}] ✓ Report assembled`,'ok');
+    renderReport(tk, true);
+    btn.disabled = false;
+    status.textContent = '⚠️ Mission complete (Mock Mode — start api_server.py for live Gemini)';
+    setTimeout(()=>{ logEl.classList.remove('visible'); status.textContent=''; }, 6000);
+  }, 2900);
+}
+
+function runMockImmediate(tk, btn, logEl){
+  setPipelineStage('ps3','done','✓ DONE','var(--green)');
+  renderReport(tk, true); btn.disabled=false;
+  setTimeout(()=>logEl.classList.remove('visible'), 4000);
+}
+
+// ── Pipeline helpers ──────────────────────────────────────────────────────── //
+function resetPipeline(){
+  ['ps1','ps2','ps3'].forEach(id=>{ document.getElementById(id).className='pipeline-stage'; });
+  ['ps1-status','ps2-status','ps3-status'].forEach(id=>{ const e=document.getElementById(id); e.textContent=''; e.style.color=''; });
+  ['log1','log2','log3'].forEach(id=>{ const e=document.getElementById(id); e.textContent=''; e.className='stage-log-line'; });
+}
+function setPipelineStage(id, cls, label, color){
+  document.getElementById(id).className = 'pipeline-stage '+cls;
+  const s = document.getElementById(id+'-status');
+  s.textContent=label; s.style.color=color;
+}
+function setLog(id, text, cls){ const e=document.getElementById(id); e.textContent=text; e.className='stage-log-line '+cls; }
+function ts(){ return new Date().toISOString().substring(11,19)+'Z'; }
+
+// ── Render live API report ────────────────────────────────────────────────── //
+function renderLiveReport(data){
+  const rec = data.final_recommendation || {};
+  const inf = data.infiltrator_data || {};
+  const strat = data.strategist_analysis || {};
+  const m = inf.financial_metrics || {};
+  const tr = rec.threshold_results || {};
+
+  // Recommendation banner
+  const recommendation = rec.recommendation || 'HOLD';
+  const clsMap = {BUY:'rec-buy',HOLD:'rec-hold',AVOID:'rec-avoid'};
+  const iconMap = {BUY:'✅',HOLD:'⏸️',AVOID:'🚫'};
+  const recSmMap = {BUY:'rec-buy-sm',HOLD:'rec-hold-sm',AVOID:'rec-avoid-sm'};
+  document.getElementById('recBanner').className = 'rec-banner ' + (clsMap[recommendation]||'rec-hold');
+  document.getElementById('recIcon').textContent = iconMap[recommendation]||'⏸️';
+  document.getElementById('recText').textContent = recommendation;
+  document.getElementById('recConf').textContent = `Confidence: ${rec.confidence||'?'} · ${(rec.classifications||[]).join(' · ')}`;
+  document.getElementById('recSummary').textContent = rec.summary || '';
+
+  // Risk flags
+  document.getElementById('riskFlags').innerHTML = (rec.risk_flags||[]).map(f=>
+    `<span class="risk-pill warn">⚐ ${f}</span>`).join('');
+
+  // Metrics
+  const fmt = (v,suffix='') => v!=null ? `${v}${suffix}` : 'N/A';
+  const fmtPct = v => v!=null ? `${v}%` : 'N/A';
+  const fmtX = v => v!=null ? `${v}×` : 'N/A';
+  const dyVal = m.dividend_yield_pct;
+  const peVal = m.pe_ratio;
+  const deVal = m.debt_to_equity;
+  const rgVal = m.revenue_growth_yoy_pct;
+  const dyP = tr.dividend_yield_pass;
+  const peP = tr.value_zone_pass;
+  const deP = tr.balance_sheet_pass;
+
+  const set=(id,val,color)=>{const e=document.getElementById(id);e.textContent=val;if(color)e.style.color=color;};
+  set('metDY', fmtPct(dyVal), dyP ? 'var(--green)' : 'var(--yellow)');
+  set('metPE', fmtX(peVal), null);
+  set('metDE', fmt(deVal), null);
+  set('metMC', m.market_cap_myr ? `RM ${(m.market_cap_myr/1e9).toFixed(1)}B` : 'N/A', null);
+  set('met52', (m['52_week_high']&&m['52_week_low']) ? `${m['52_week_low']} ” ${m['52_week_high']}` : 'N/A', null);
+  set('metRG', rgVal!=null ? `${rgVal>=0?'+':''}${rgVal}%` : 'N/A', rgVal>=0?'var(--green)':'var(--red)');
+
+  // Threshold badges
+  const setBadge=(id,pass,pl,fl)=>{
+    const e=document.getElementById(id); e.className='badge '+(pass?'badge-green':'badge-red');
+    e.textContent=(pass?'✓ ':'✗ ')+(pass?pl:fl);
+  };
+  setBadge('thDY',dyP,'Yield Fortress','Below Threshold');
+  setBadge('thPE',peP,'Value Zone','Overvalued');
+  setBadge('thDE',deP,'Balance Sheet Safe','High Leverage');
+  setBadge('badgeDY',dyP,'Pass','Fail');
+  setBadge('badgePE',peP,'Pass','Fail');
+  setBadge('badgeDE',deP,'Pass','Fail');
+
+  // Sentiment
+  const s = rec.sentiment_score || 0;
+  const pct = ((s+1)/2*100).toFixed(0);
+  document.getElementById('sentMarker').style.left = pct+'%';
+  const sEl = document.getElementById('sentScore');
+  sEl.textContent = (s>=0?'+':'')+s.toFixed(2);
+  sEl.style.color = s>0.1?'var(--green)':s<-0.1?'var(--red)':'var(--yellow)';
+  document.getElementById('sentLabel').textContent = s>0.3?'Moderately Bullish':s<-0.3?'Bearish':'Neutral';
+
+  // Traces
+  document.getElementById('infiltratorTrace').textContent = inf.thought_trace || '(no trace)';
+  document.getElementById('strategistTrace').textContent = strat.thought_trace || '(no trace)';
+
+  // Recovery log
+  const rl = strat.recovery_log || [];
+  document.getElementById('recoveryLog').innerHTML = rl.length
+    ? rl.map(r=>`<div class="recovery-item"><span>${r}</span></div>`).join('')
+    : '<div class="recovery-item"><span style="color:var(--green)">✅ No recovery triggered.</span></div>';
+
+  // News
+  const news = inf.news_headlines || [];
+  document.getElementById('newsFeed').innerHTML = news.length
+    ? news.map(n=>`
+      <div class="news-item">
+        <div class="news-dot" style="background:${'positive'===n.sentiment_hint?'var(--green)':'negative'===n.sentiment_hint?'var(--red)':'var(--yellow)'}"></div>
+        <div><div class="news-headline">${n.headline}</div><div class="news-meta">${n.source} · ${n.sentiment_hint}</div></div>
+      </div>`).join('')
+    : '<div class="news-item"><div class="news-headline" style="color:var(--muted)">No headlines retrieved.</div></div>';
+
+  // Store for export
+  currentTicker = data.ticker || currentTicker;
+  currentReport = null;
+}
+
+// ── renderReport (mock) ──────────────────────────────────────────────────── //
+function renderReport(tk, animated){
+  const d = REPORTS[tk]; if(!d) return;
+  currentTicker = tk; currentReport = d;
+
+  document.getElementById('recBanner').className = 'rec-banner ' + d.cls;
+  document.getElementById('recIcon').textContent = d.icon;
+  document.getElementById('recText').textContent = d.rec;
+  document.getElementById('recConf').textContent = `Confidence: ${d.conf} · ${d.classifications.join(' · ')}`;
+  document.getElementById('recSummary').textContent = d.summary;
+  document.getElementById('riskFlags').innerHTML = d.riskFlags.map(f=>{
+    const t = f.type==='danger'?'':'warn'===f.type?' warn':' info';
+    return `<span class="risk-pill${t}">⚐ ${f.label}</span>`;
+  }).join('');
+
+  const m = d.metrics;
+  const set=(id,val,color)=>{const e=document.getElementById(id);e.textContent=val;if(color)e.style.color=color;};
+  set('metDY',m.dy,m.dyC); set('metPE',m.pe,null); set('metDE',m.de,null);
+  set('metMC',m.mc,null); set('met52',m.range,null); set('metRG',m.rg,m.rgC);
+
+  const setBadge=(id,pass,pl,fl)=>{const e=document.getElementById(id);e.className='badge '+(pass?'badge-green':'badge-red');e.textContent=(pass?'✓ ':'✗ ')+(pass?pl:fl);};
+  setBadge('thDY',m.dyP,'Yield Fortress','Below Threshold');
+  setBadge('thPE',m.peP,'Value Zone','Overvalued');
+  setBadge('thDE',m.deP,'Balance Sheet Safe','High Leverage');
+  setBadge('badgeDY',m.dyP,'Pass','Fail'); setBadge('badgePE',m.peP,'Pass','Fail'); setBadge('badgeDE',m.deP,'Pass','Fail');
+
+  const s=d.sentiment, pct=((s+1)/2*100).toFixed(0);
+  document.getElementById('sentMarker').style.left=pct+'%';
+  const sEl=document.getElementById('sentScore');
+  sEl.textContent=(s>=0?'+':'')+s.toFixed(2);
+  sEl.style.color=s>0.1?'var(--green)':s<-0.1?'var(--red)':'var(--yellow)';
+  document.getElementById('sentLabel').textContent=s>0.3?'Moderately Bullish':s<-0.3?'Bearish':'Neutral';
+  document.getElementById('infiltratorTrace').textContent=d.infiltratorTrace;
+  document.getElementById('strategistTrace').textContent=d.strategistTrace;
+  document.getElementById('recoveryLog').innerHTML=d.recovery.map(r=>`<div class="recovery-item"><span>${r}</span></div>`).join('');
+  document.getElementById('newsFeed').innerHTML=d.news.map(n=>`
+    <div class="news-item">
+      <div class="news-dot" style="background:${'positive'===n.sent?'var(--green)':'negative'===n.sent?'var(--red)':'var(--yellow)'}"></div>
+      <div><div class="news-headline">${n.h}</div><div class="news-meta">${n.s} · ${n.sent}</div></div>
+    </div>`).join('');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────── //
+function exportReport(){
+  const payload = _liveReport || {
+    mission:'BursaSentinel Strategic Research Swarm',
+    ticker: currentTicker,
+    generated: new Date().toISOString(),
+    source: 'MOCK_DATA',
+    final_recommendation: currentReport ? {
+      recommendation: currentReport.rec,
+      confidence: currentReport.conf,
+      classifications: currentReport.classifications,
+      sentiment_score: currentReport.sentiment,
+      summary: currentReport.summary,
+      risk_flags: currentReport.riskFlags.map(f=>f.label),
+    } : {},
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `report_${currentTicker}_${Date.now()}.json`;
+  a.click();
+}
+
+init();
+</script>
+</body>
+</html>
