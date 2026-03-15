@@ -68,6 +68,8 @@ BursaSentinel achieves high **Technical Depth** by utilizing modern agentic fram
 
 ### The Swarm Architecture (A2A Flow)
 
+![BursaSentinel: The Autonomous AI Research Swarm Workflow](diagram.png)
+
 ```mermaid
 graph TD
     A[User Dashboard] -->|API Request| B(Flask API Server)
