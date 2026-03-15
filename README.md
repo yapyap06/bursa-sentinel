@@ -11,6 +11,8 @@
 **What is BursaSentinel?**
 BursaSentinel is an autonomous, **SequentialAgent AI Swarm** designed to perform strategic research on Bursa Malaysia listed stocks. 
 
+**🔴 Live Demo:** [https://bursa-sentinel-app.vercel.app/](https://bursa-sentinel-app.vercel.app/)
+
 **The Problem it Solves:**
 Financial analysts spend hours manually digging through messy quarterly reports, PDF filings, and fragmented news headlines to calculate metrics like Dividend Yield and P/E ratios. BursaSentinel automates this entire pipeline. By deploying a swarm of specialized Gemini agents, it ingests raw unstructured web data, cross-references it against strict financial thresholds, and delivers a final synthesised BUY/HOLD/AVOID recommendation in seconds.
 
